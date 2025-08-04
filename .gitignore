@@ -1,0 +1,4 @@
+cc/data/*
+cc/spark-warehouse/*
+__pycache__/
+nohup.out
