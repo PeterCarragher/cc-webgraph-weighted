@@ -179,13 +179,31 @@ fi
 if run_step 3; then
     echo ""
     echo "=== Step 3: Weighted link extraction ==="
+
+    # num_input_partitions: 1 per MB of WAT index parquet (min 10).
+    # Avoids thousands of empty partitions on small runs; scales with data volume.
+    WAT_SIZE_BYTES=$(aws s3 ls --recursive "${WAT_INDEX_S3}/" \
+        | grep '\.parquet' | awk '{sum+=$3} END {print sum+0}')
+    WAT_SIZE_MB=$(( (WAT_SIZE_BYTES + 1048575) / 1048576 ))
+    NUM_INPUT_PARTITIONS=$(( WAT_SIZE_MB > 10 ? WAT_SIZE_MB : 10 ))
+
+    # num_output_partitions: 2 per target domain (min 1).
+    # Output rows ≈ unique_sources × num_targets, so target count is the key
+    # scaling axis. 2× gives headroom without producing many tiny files.
+    NUM_TARGETS=$(aws s3 cp "${TARGET_DOMAINS_S3}" - 2>/dev/null \
+        | grep -c '[^[:space:]]' || echo 1)
+    NUM_OUTPUT_PARTITIONS=$(( NUM_TARGETS * 2 > 1 ? NUM_TARGETS * 2 : 1 ))
+
+    echo "WAT index: ${WAT_SIZE_MB} MB → num_input_partitions=${NUM_INPUT_PARTITIONS}"
+    echo "Target domains: ${NUM_TARGETS} → num_output_partitions=${NUM_OUTPUT_PARTITIONS}"
+
     ARGS="[
         \"${WAT_INDEX_S3}\",
         \"weighted_links\",
         \"--input_table_format\",    \"parquet\",
         \"--input_base_url\",        \"s3://commoncrawl/\",
-        \"--num_input_partitions\",  \"2000\",
-        \"--num_output_partitions\", \"200\",
+        \"--num_input_partitions\",  \"${NUM_INPUT_PARTITIONS}\",
+        \"--num_output_partitions\", \"${NUM_OUTPUT_PARTITIONS}\",
         \"--target_domains\",        \"${TARGET_DOMAINS_S3}\"
     ]"
     JOB3=$(submit_job "3-weighted-extract" "${CODE_S3}/weighted_extract_links.py" "${ARGS}")
