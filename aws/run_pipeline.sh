@@ -62,15 +62,15 @@ BASE="s3://${S3_BUCKET}/pipeline/${WEBGRAPH_CRAWL}"
 WEBGRAPH_PREFIX="s3://commoncrawl/projects/hyperlinkgraph/${WEBGRAPH_CRAWL}/host"
 
 CODE_S3="${BASE}/code"
-EXPANDED_DOMAINS_S3="${BASE}/expanded_domains"
-WAT_INDEX_S3="${BASE}/wat_index"
+EXPANDED_DOMAINS_S3="${EXPANDED_DOMAINS_S3:-${BASE}/expanded_domains}"
+WAT_INDEX_S3="${WAT_INDEX_S3:-${BASE}/wat_index}"
 WAREHOUSE_S3="${BASE}/warehouse"
 VENV_S3="${VENV_S3:-s3://${S3_BUCKET}/emr/pyspark_venv.tar.gz}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 PIPELINE_DIR="${REPO_DIR}/cc/pipeline"
-CC_OFFICIAL="${REPO_DIR}/cc-pyspark-official/cc-pyspark-official"
+CC_OFFICIAL="${CC_OFFICIAL:-${REPO_DIR}/cc-pyspark-official/cc-pyspark-official}"
 
 run_step() { echo "${STEPS}" | tr ',' '\n' | grep -q "^${1}$"; }
 
@@ -185,7 +185,8 @@ if run_step 3; then
         \"--input_table_format\",    \"parquet\",
         \"--input_base_url\",        \"s3://commoncrawl/\",
         \"--num_input_partitions\",  \"2000\",
-        \"--num_output_partitions\", \"200\"
+        \"--num_output_partitions\", \"200\",
+        \"--target_domains\",        \"${TARGET_DOMAINS_S3}\"
     ]"
     JOB3=$(submit_job "3-weighted-extract" "${CODE_S3}/weighted_extract_links.py" "${ARGS}")
     echo "Job ID: ${JOB3}"

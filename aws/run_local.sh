@@ -29,12 +29,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 PIPELINE_DIR="${REPO_DIR}/cc/pipeline"
-CC_OFFICIAL="${REPO_DIR}/cc-pyspark-official/cc-pyspark-official"
+CC_OFFICIAL="${CC_OFFICIAL:-${REPO_DIR}/cc-pyspark-official/cc-pyspark-official}"
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 S3_BUCKET="${S3_BUCKET:-cc-pyspark}"
 WEBGRAPH_CRAWL="${WEBGRAPH_CRAWL:-cc-main-2024-aug-sep-oct}"
-DATA_CRAWL="${DATA_CRAWL:-CC-MAIN-2024-39}"
+DATA_CRAWL="${DATA_CRAWL:-CC-MAIN-2024-38}"
 STEPS="${STEPS:-1,2,3}"
 MAX_WAT_PER_HOST="${MAX_WAT_PER_HOST:-}"
 
@@ -108,7 +108,8 @@ if run_step 3; then
         --input_table_format parquet \
         --input_base_url     "s3://commoncrawl/" \
         --num_input_partitions  50 \
-        --num_output_partitions 4
+        --num_output_partitions 4 \
+        --target_domains        "${TARGET_DOMAINS}"
     echo "Output table: ${WAREHOUSE}/weighted_links/"
 fi
 
