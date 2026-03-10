@@ -1,3 +1,0 @@
-[submodule "cc-pyspark"]
-	path = cc-pyspark
-	url = git@github.com:PeterCarragher/cc-pyspark.git
