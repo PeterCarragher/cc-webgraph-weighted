@@ -98,6 +98,15 @@ EXECUTOR_CORES=4    # default
 DRIVER_MEM=8g       # default
 ```
 
+### Costs / Logistics
+The logistics and costs of running this spark job on AWS EMR for a target_domain list of ~1400 popular domains are so follows:
+- ~3M WARC files parsed
+- ~3 hours runtime with 64vCPU limit
+- 204.477 vCPU-hours billed
+- 891.162 memoryGB-hours billed
+- 1022.383 storageGB-hours (not billed, WARC files are already on AWS)
+- Total AWS bill: ~$5 
+
 ## Step 4 — Download results
 
 ```bash
